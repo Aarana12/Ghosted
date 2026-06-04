@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guess Why I Ghosted You</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a0a3c;
+    --bg2: #2a1060;
+    --purple: #6b3fa0;
+    --pink: #ff5fa0;
+    --text: #e8d8ff;
+    --option-bg: rgba(255,255,255,0.08);
+    --option-border: rgba(255,255,255,0.15);
+    --option-hover: rgba(255,255,255,0.14);
+    --selected: rgba(180,100,255,0.25);
+    --selected-border: #b46cff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Nunito Sans', sans-serif;
+    overflow: hidden;
+  }
+
+  /* Glow background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 30%, rgba(120,50,200,0.4) 0%, transparent 70%),
+                radial-gradient(ellipse at 80% 80%, rgba(255,50,120,0.15) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .phone {
+    width: 360px;
+    min-height: 680px;
+    background: linear-gradient(160deg, #2e1270 0%, #1a0a3c 100%);
+    border-radius: 40px;
+    padding: 36px 24px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+    box-shadow: 0 0 60px rgba(120,50,220,0.5), 0 0 120px rgba(80,20,180,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* ─── SCREEN 0: Name Entry ─── */
+  #screen-name { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 22px; }
+
+  .name-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(220,200,255,0.5);
+    align-self: flex-start;
+    margin-bottom: -12px;
+  }
+
+  .name-input {
+    width: 100%;
+    background: var(--option-bg);
+    border: 1.5px solid var(--option-border);
+    border-radius: 14px;
+    padding: 15px 18px;
+    color: #fff;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    caret-color: #ff5fa0;
+  }
+  .name-input::placeholder { color: rgba(220,200,255,0.35); font-weight: 400; }
+  .name-input:focus {
+    border-color: var(--selected-border);
+    box-shadow: 0 0 0 3px rgba(180,108,255,0.18);
+  }
+
+  /* ─── SCREEN 1: Quiz ─── */
+  #screen-quiz { width: 100%; display: none; flex-direction: column; align-items: center; gap: 18px; }
+
+  .ghost-icon {
+    font-size: 56px;
+    filter: drop-shadow(0 0 16px rgba(220,160,255,0.8));
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(-8px); }
+  }
+
+  h1 {
+    font-family: 'Nunito', sans-serif;
+    font-size: 28px;
+    font-weight: 900;
+    color: #fff;
+    text-align: center;
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+  }
+
+  .subtitle {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--pink);
+    margin-top: -10px;
+  }
+
+  .options { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+
+  .option {
+    background: var(--option-bg);
+    border: 1.5px solid var(--option-border);
+    border-radius: 14px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .option:hover { background: var(--option-hover); transform: translateX(3px); }
+  .option.selected {
+    background: var(--selected);
+    border-color: var(--selected-border);
+  }
+
+  .radio {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.35);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.2s;
+  }
+  .option.selected .radio { border-color: var(--selected-border); }
+  .radio-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--selected-border);
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    transform: scale(0.4);
+  }
+  .option.selected .radio-dot { opacity: 1; transform: scale(1); }
+
+  .option-emoji { font-size: 20px; }
+
+  .btn {
+    background: linear-gradient(135deg, #c060ff, #ff4d9a);
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    padding: 15px 0;
+    width: 100%;
+    font-family: 'Nunito', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 20px rgba(200,80,255,0.4);
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
+    opacity: 0.5;
+  }
+  .btn.active { opacity: 1; }
+  .btn:hover.active { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(200,80,255,0.55); }
+  .btn:active.active { transform: translateY(1px); }
+
+  /* ─── SCREEN 2: Spin ─── */
+  #screen-spin {
+    width: 100%;
+    display: flex; flex-direction: column; align-items: center; gap: 22px;
+    display: none;
+  }
+
+  .truth-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--pink);
+  }
+
+  .spin-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: 30px;
+    font-weight: 900;
+    color: #fff;
+    text-align: center;
+  }
+
+  /* Pointer */
+  .pointer-wrap { position: relative; width: 240px; display: flex; justify-content: center; }
+  .pointer {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 9px solid transparent;
+    border-right: 9px solid transparent;
+    border-top: 18px solid #ff5fa0;
+    z-index: 10;
+    filter: drop-shadow(0 0 6px rgba(255,90,160,0.8));
+  }
+
+  .wheel-wrap {
+    width: 240px; height: 240px;
+    position: relative;
+    margin-top: 8px;
+  }
+
+  canvas#wheel {
+    width: 240px; height: 240px;
+    border-radius: 50%;
+    box-shadow: 0 0 32px rgba(160,80,255,0.5);
+  }
+
+  /* Center knob */
+  .knob {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff, #c0a0ff);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    z-index: 5;
+  }
+
+  /* ─── SCREEN 3: Result ─── */
+  #screen-result {
+    width: 100%;
+    display: none;
+    flex-direction: column; align-items: center; gap: 20px;
+    text-align: center;
+  }
+
+  .result-ghost { font-size: 72px; animation: float 3s ease-in-out infinite; filter: drop-shadow(0 0 24px rgba(220,160,255,0.9)); }
+
+  .result-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: var(--pink);
+  }
+
+  .result-reason {
+    font-family: 'Nunito', sans-serif;
+    font-size: 36px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -1px;
+    animation: pop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  @keyframes pop {
+    from { transform: scale(0.5); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+
+  .result-desc {
+    color: rgba(220,200,255,0.75);
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 260px;
+  }
+
+  .btn-retry {
+    background: transparent;
+    border: 2px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.7);
+    border-radius: 16px;
+    padding: 13px 0;
+    width: 100%;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-retry:hover { border-color: rgba(255,255,255,0.4); color: #fff; }
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- SCREEN 0: Name Entry -->
+  <div id="screen-name">
+    <div class="ghost-icon">👻</div>
+    <h1>Guess Why I'm<br>Not Dating You</h1>
+    <div class="subtitle">Be Honest With Yourself</div>
+
+    <div style="width:100%; display:flex; flex-direction:column; gap:10px; margin-top:6px;">
+      <div class="name-label">Your Name</div>
+      <input
+        class="name-input"
+        id="name-input"
+        type="text"
+        placeholder="Enter your name..."
+        oninput="onNameInput(this.value)"
+        onkeydown="if(event.key==='Enter') startQuiz()"
+        maxlength="30"
+        autocomplete="off"
+      />
+    </div>
+
+    <button class="btn" id="start-btn" onclick="startQuiz()">Let's Go 👻</button>
+  </div>
+
+  <!-- SCREEN 1: Quiz -->
+  <div id="screen-quiz">
+    <div class="ghost-icon">👻</div>
+    <h1 id="quiz-heading">Guess Why I<br>Ghosted You</h1>
+    <div class="subtitle">Be Honest With Yourself</div>
+
+    <div class="options">
+      <div class="option" data-value="Chopped" onclick="selectOption(this)">
+        <div class="radio"><div class="radio-dot"></div></div>
+        <span class="option-emoji">🪓</span>
+        <span>Chopped</span>
+      </div>
+      <div class="option" data-value="Boring" onclick="selectOption(this)">
+        <div class="radio"><div class="radio-dot"></div></div>
+        <span class="option-emoji">😴</span>
+        <span>Boring</span>
+      </div>
+      <div class="option" data-value="Basic" onclick="selectOption(this)">
+        <div class="radio"><div class="radio-dot"></div></div>
+        <span class="option-emoji">🧊</span>
+        <span>Basic</span>
+      </div>
+      <div class="option" data-value="Overweight" onclick="selectOption(this)">
+        <div class="radio"><div class="radio-dot"></div></div>
+        <span class="option-emoji">🍔</span>
+        <span>Overweight</span>
+      </div>
+    </div>
+
+    <button class="btn" id="find-out-btn" onclick="goToSpin()">Find Out 👻</button>
+  </div>
+
+  <!-- SCREEN 2: Spin -->
+  <div id="screen-spin">
+    <div class="truth-label">The Truth Is...</div>
+    <div class="spin-title">Spin to Find Out</div>
+
+    <div class="pointer-wrap">
+      <div class="pointer"></div>
+      <div class="wheel-wrap">
+        <canvas id="wheel" width="240" height="240"></canvas>
+        <div class="knob"></div>
+      </div>
+    </div>
+
+    <button class="btn active" id="spin-btn" onclick="spinWheel()">Spin 🎰</button>
+  </div>
+
+  <!-- SCREEN 3: Result -->
+  <div id="screen-result">
+    <div class="result-ghost">👻</div>
+    <div class="result-label">The Real Reason...</div>
+    <div class="result-reason" id="result-text"></div>
+    <div class="result-desc" id="result-desc"></div>
+    <button class="btn active" onclick="restart()" style="margin-top:8px">Try Again 🔄</button>
+  </div>
+
+</div>
+
+<script>
+const segments = [
+  { label: 'CHOPPED',     color: '#b08ee0', desc: 'You got cut off. Sometimes it just wasn\'t meant to be. 🪓' },
+  { label: 'BORING',      color: '#ff5fa0', desc: 'The vibes were flat. Try adding more energy next time. 😴' },
+  { label: 'BASIC',       color: '#40d0c0', desc: 'Too predictable. Stand out and be yourself! 🧊' },
+  { label: 'OVERWEIGHT',  color: '#f0d040', desc: 'Too much emotional baggage, babe. Travel light. 🍔' },
+];
+
+let spinning = false;
+let selectedValue = null;
+let userName = '';
+
+function onNameInput(val) {
+  userName = val.trim();
+  const btn = document.getElementById('start-btn');
+  btn.classList.toggle('active', userName.length > 0);
+}
+
+function startQuiz() {
+  if (!userName) return;
+  document.getElementById('screen-name').style.display = 'none';
+  const quiz = document.getElementById('screen-quiz');
+  quiz.style.display = 'flex';
+  // Personalise the heading
+  document.getElementById('quiz-heading').innerHTML = `Guess Why I<br>Ghosted You, ${userName}`;
+}
+
+
+let currentAngle = 0;
+
+function selectOption(el) {
+  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedValue = el.dataset.value;
+  document.getElementById('find-out-btn').classList.add('active');
+}
+
+function goToSpin() {
+  if (!selectedValue) return;
+  document.getElementById('screen-quiz').style.display = 'none';
+  const spin = document.getElementById('screen-spin');
+  spin.style.display = 'flex';
+  drawWheel(currentAngle);
+}
+
+// ── Canvas Wheel ──
+function drawWheel(rotation) {
+  const canvas = document.getElementById('wheel');
+  const ctx = canvas.getContext('2d');
+  const cx = 120, cy = 120, r = 118;
+  const total = segments.length;
+  const arc = (2 * Math.PI) / total;
+
+  ctx.clearRect(0, 0, 240, 240);
+
+  segments.forEach((seg, i) => {
+    const start = rotation + i * arc - Math.PI / 2;
+    const end   = start + arc;
+
+    // Slice
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, end);
+    ctx.closePath();
+    ctx.fillStyle = seg.color;
+    ctx.fill();
+
+    // Subtle border
+    ctx.strokeStyle = 'rgba(30,10,60,0.5)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Text
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(start + arc / 2);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 12px Nunito, sans-serif';
+    ctx.shadowColor = 'rgba(0,0,0,0.4)';
+    ctx.shadowBlur = 4;
+    ctx.fillText(seg.label, r - 14, 4);
+    ctx.restore();
+  });
+}
+
+function spinWheel() {
+  if (spinning) return;
+  spinning = true;
+  document.getElementById('spin-btn').style.opacity = '0.5';
+
+  // Always land on OVERWEIGHT
+  const labels = segments.map(s => s.label);
+  const targetIdx = labels.indexOf('CHOPPED'); // Change to 'OVERWEIGHT' for that result
+
+  const total = segments.length;
+  const arc = (2 * Math.PI) / total;
+
+  // Destination: land target segment under the top pointer (angle 0)
+  // Segment i occupies: i*arc to (i+1)*arc (offset by -π/2)
+  // Center of target segment at angle: targetIdx * arc + arc/2
+  // We want that center at the top (angle 0 in our draw, which is -π/2 from standard)
+  const targetCenter = targetIdx * arc + arc / 2;
+  const spins = 5 + Math.floor(Math.random() * 4); // 5–8 full spins
+  const finalAngle = spins * 2 * Math.PI - targetCenter;
+
+  const duration = 4000;
+  const start = performance.now();
+  const startAngle = currentAngle;
+
+  function easeOut(t) {
+    return 1 - Math.pow(1 - t, 4);
+  }
+
+  function animate(now) {
+    const elapsed = now - start;
+    const t = Math.min(elapsed / duration, 1);
+    const angle = startAngle + (finalAngle - startAngle) * easeOut(t);
+    currentAngle = angle;
+    drawWheel(angle);
+
+    if (t < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      spinning = false;
+      showResult(targetIdx);
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+function showResult(idx) {
+  setTimeout(() => {
+    document.getElementById('screen-spin').style.display = 'none';
+    const res = document.getElementById('screen-result');
+    res.style.display = 'flex';
+    document.getElementById('result-text').textContent = segments[idx].label;
+    document.getElementById('result-desc').textContent = segments[idx].desc;
+  }, 600);
+}
+
+function restart() {
+  selectedValue = null;
+  currentAngle = 0;
+  spinning = false;
+  userName = '';
+  document.getElementById('screen-result').style.display = 'none';
+  document.getElementById('screen-quiz').style.display = 'none';
+  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  document.getElementById('find-out-btn').classList.remove('active');
+  document.getElementById('spin-btn').style.opacity = '1';
+  document.getElementById('name-input').value = '';
+  document.getElementById('start-btn').classList.remove('active');
+  document.getElementById('screen-name').style.display = 'flex';
+}
+
+// Initial wheel draw
+document.addEventListener('DOMContentLoaded', () => drawWheel(0));
+</script>
+</body>
+</html>
